@@ -6,7 +6,6 @@ export const DonutChart = ({
   strokeWidth = 24, 
   centerPrimary = 'Total', 
   centerSecondary = 'Unit',
-  gap = 3 
 }) => {
   const total = data.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0);
   const radius = (size - strokeWidth) / 2;
@@ -16,9 +15,21 @@ export const DonutChart = ({
 
   return (
     <div className="position-relative d-inline-flex align-items-center justify-content-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="transform-rotate" style={{ transform: 'rotate(-90deg)' }}>
-        {data.map((item, idx) => {
-          const percent = total > 0 ? (item.value / total) : 0;
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+        {/* Background track circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="transparent"
+          stroke="#f1f5f9"
+          strokeWidth={strokeWidth}
+        />
+        {total > 0 && data.map((item, idx) => {
+          const val = Math.max(0, parseFloat(item.value) || 0);
+          const percent = val / total;
+          if (percent <= 0) return null;
+          
           const strokeDasharray = `${percent * circumference} ${circumference}`;
           const strokeDashoffset = -accumulatedPercent * circumference;
           accumulatedPercent += percent;
@@ -35,7 +46,7 @@ export const DonutChart = ({
               strokeDasharray={strokeDasharray}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              style={{ transition: 'stroke-dasharray 0.5s ease' }}
+              style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease' }}
             />
           );
         })}
