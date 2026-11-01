@@ -195,4 +195,54 @@ class SupplyFlowApiTest extends TestCase
         $excessRes->assertStatus(422)
             ->assertJsonPath('success', false);
     }
+
+    public function test_ai_insights_diagnostics_endpoint_returns_health_score_and_actionable_insights()
+    {
+        $admin = User::where('email', 'admin@supplyflow.com')->first();
+        $token = $admin->createToken('test')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/ai-insights');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'health_score',
+                    'health_status',
+                    'evaluated_at',
+                    'sub_scores' => ['inventory', 'quality', 'procurement', 'logistics'],
+                    'summary_kpis' => ['safe_materials', 'qc_pass_rate', 'on_time_rate', 'active_bottlenecks'],
+                    'insights',
+                ],
+            ]);
+
+        $this->assertIsInt($response->json('data.health_score'));
+        $this->assertNotEmpty($response->json('data.insights'));
+    }
+
+    public function test_ai_insights_demand_simulation()
+    {
+        $admin = User::where('email', 'admin@supplyflow.com')->first();
+        $token = $admin->createToken('test')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/ai-insights/simulate', [
+                'spike_percent' => 30,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.spike_percent', 30)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'spike_percent',
+                    'multiplier',
+                    'critical_materials_count',
+                    'materials',
+                ]
+            ]);
+    }
 }

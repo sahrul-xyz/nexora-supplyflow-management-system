@@ -22,6 +22,7 @@ import { PartnerOrderList } from './pages/partner-orders/PartnerOrderList';
 import { PartnerOrderCreate } from './pages/partner-orders/PartnerOrderCreate';
 import { PartnerOrderDetail } from './pages/partner-orders/PartnerOrderDetail';
 import { UserManagement } from './pages/users/UserManagement';
+import { AiInsightsPage } from './pages/ai-insights/AiInsightsPage';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading, hasRole } = useAuth();
@@ -136,6 +137,9 @@ export function App() {
 
             {/* Inventory Monitoring (all authenticated users) */}
             <Route path="inventory" element={<InventoryOverview />} />
+
+            {/* AI Insights & Diagnostics Engine */}
+            <Route path="ai-insights" element={<AiInsightsPage />} />
 
             {/* Distribution */}
             <Route 

@@ -29,6 +29,7 @@ import {
   CheckCircle,
   ArrowRight,
   WarningCircle,
+  Sparkle,
   X
 } from '@phosphor-icons/react';
 
@@ -95,6 +96,7 @@ export const MainLayout = () => {
   const getPageTitle = () => {
     const p = location.pathname;
     if (p === '/') return 'Dashboard';
+    if (p.startsWith('/ai-insights')) return 'AI Insights Engine & Diagnostik SCM';
     if (p.startsWith('/inventory')) return 'Monitoring Stok Pergudangan';
     if (p.startsWith('/production-orders')) return 'Perencanaan & Produksi (MTS)';
     if (p.startsWith('/partner-orders')) return 'Distribusi & Pesanan Mitra';
@@ -208,6 +210,17 @@ export const MainLayout = () => {
             <NavLink to="/partners" className={({ isActive }) => `nexora-nav-item ${isActive ? 'active' : ''}`} title="Data Mitra">
               <Globe size={22} weight="duotone" className="flex-shrink-0" />
               {!collapsed && <span>Mitra Distribusi</span>}
+            </NavLink>
+
+            {/* AI Insights Engine & Diagnostik SCM */}
+            <NavLink to="/ai-insights" className={({ isActive }) => `nexora-nav-item ${isActive ? 'active' : ''}`} title="AI Insights Engine">
+              <Sparkle size={22} weight="duotone" className="flex-shrink-0 text-primary-indigo" />
+              {!collapsed && (
+                <div className="d-flex align-items-center justify-content-between flex-grow-1">
+                  <span>AI Insights</span>
+                  <span className="badge rounded-pill bg-purple-subtle text-primary-indigo fw-bold" style={{ fontSize: '0.625rem' }}>AI Live</span>
+                </div>
+              )}
             </NavLink>
 
             {/* Sidebar Notifications Trigger */}

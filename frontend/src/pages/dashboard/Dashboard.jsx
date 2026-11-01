@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { Sparkline } from '../../components/charts/Sparkline';
 import { DonutChart } from '../../components/charts/DonutChart';
 import { ForecastLineChart } from '../../components/charts/ForecastLineChart';
+import { AiDiagnosticModal } from '../../components/AiDiagnosticModal';
 import { 
   Package, 
   TrendUp, 
@@ -29,6 +30,7 @@ export const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
   const [forecastScenario, setForecastScenario] = useState('all'); // 'all', 'forecast', 'high', 'low'
   const [scenarioDropdown, setScenarioDropdown] = useState(false);
   const [actionDone, setActionDone] = useState([false, false, false]);
@@ -611,23 +613,36 @@ export const Dashboard = () => {
           <div className="card-nexora ai-insights-card p-4 h-100 d-flex flex-column justify-content-between position-relative">
             <div className="ai-insights-aura"></div>
             <div>
-              <div className="d-flex align-items-center gap-2 mb-3">
-                <div 
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white"
-                  style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)' }}
-                >
-                  <Sparkle size={18} weight="fill" />
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <div className="d-flex align-items-center gap-2">
+                  <div 
+                    className="rounded-circle d-flex align-items-center justify-content-center text-white"
+                    style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)' }}
+                  >
+                    <Sparkle size={18} weight="fill" />
+                  </div>
+                  <h6 className="fw-bold mb-0 text-dark">AI Insights Engine</h6>
                 </div>
-                <h6 className="fw-bold mb-0 text-dark">AI Insights Engine</h6>
+                <span className="badge bg-purple text-primary-indigo border border-indigo-subtle small py-1 px-2" style={{ fontSize: '0.675rem' }}>
+                  Live Diagnostic
+                </span>
               </div>
 
               <div className="mb-3">
                 <h6 className="fw-bold text-dark fs-6 mb-2">
-                  {ai_insight?.title || 'Analisis Sistem Manufaktur'}
+                  {ai_insight?.title || 'Analisis Prediktif Rantai Pasok'}
                 </h6>
-                <p className="text-secondary small lh-base mb-0">
+                <p className="text-secondary small lh-base mb-2">
                   {ai_insight?.text || 'Sistem memantau kondisi bahan baku dan pesanan secara terus menerus.'}
                 </p>
+                <button 
+                  onClick={() => setShowAiModal(true)} 
+                  className="btn btn-link p-0 text-decoration-none small text-primary fw-bold d-inline-flex align-items-center gap-1"
+                  style={{ fontSize: '0.75rem' }}
+                >
+                  <span>Lihat rekomendasi tindakan AI</span>
+                  <ArrowRight size={12} weight="bold" />
+                </button>
               </div>
 
               <div className="p-3 bg-white rounded-3 border border-indigo-subtle shadow-xs mb-3">
@@ -642,13 +657,24 @@ export const Dashboard = () => {
             </div>
 
             <div>
-              <button 
-                onClick={fetchDashboard}
-                className="btn btn-outline-primary btn-sm rounded-pill w-100 justify-content-center py-2"
-                style={{ borderColor: '#8B5CF6', color: '#6D28D9' }}
-              >
-                <span>Evaluasi Ulang Parameter Sistem</span>
-              </button>
+              <div className="d-flex gap-2">
+                <button 
+                  onClick={() => setShowAiModal(true)}
+                  className="btn btn-outline-primary btn-sm rounded-pill flex-grow-1 justify-content-center py-2 shadow-xs d-flex align-items-center gap-1"
+                  style={{ fontSize: '0.75rem' }}
+                >
+                  <Sparkle size={14} weight="fill" />
+                  <span>Scan Cepat</span>
+                </button>
+                <Link 
+                  to="/ai-insights"
+                  className="btn btn-primary btn-sm rounded-pill flex-grow-1 justify-content-center py-2 shadow-sm d-flex align-items-center gap-1 text-decoration-none"
+                  style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)', border: 'none', fontSize: '0.75rem' }}
+                >
+                  <span>Dashboard AI</span>
+                  <ArrowRight size={13} weight="bold" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -727,6 +753,12 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Diagnostic Modal */}
+      <AiDiagnosticModal 
+        show={showAiModal} 
+        onClose={() => setShowAiModal(false)} 
+      />
     </div>
   );
 };

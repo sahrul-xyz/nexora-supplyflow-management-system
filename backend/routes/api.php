@@ -14,6 +14,7 @@ use App\Http\Controllers\ProductionOrderController;
 use App\Http\Controllers\InventoryStockController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerOrderController;
+use App\Http\Controllers\AiInsightController;
 
 // Public Auth Route
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,6 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/ai-insights', [AiInsightController::class, 'diagnose']);
+    Route::post('/ai-insights/diagnose', [AiInsightController::class, 'diagnose']);
+    Route::match(['get', 'post'], '/ai-insights/simulate', [AiInsightController::class, 'simulate']);
 
     // Super Admin: User Account Management
     Route::middleware('role:super_admin')->group(function () {
