@@ -12,7 +12,8 @@ import {
   CurrencyCircleDollar, 
   ArrowRight, 
   Lightning, 
-  TerminalWindow
+  TerminalWindow,
+  Sliders
 } from '@phosphor-icons/react';
 
 export const AiInsightsPage = () => {

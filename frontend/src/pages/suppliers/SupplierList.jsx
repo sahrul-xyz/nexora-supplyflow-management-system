@@ -9,7 +9,8 @@ import {
   Envelope, 
   MapPin, 
   PencilSimple, 
-  Trash
+  Trash,
+  ShoppingCart
 } from '@phosphor-icons/react';
 
 export const SupplierList = () => {
