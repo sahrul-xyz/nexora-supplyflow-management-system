@@ -23,6 +23,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (User::where('email', 'admin@supplyflow.com')->exists()) {
+            return;
+        }
+
         // 1. Seed Users (3 roles)
         $superAdmin = User::create([
             'name' => 'Super Administrator',

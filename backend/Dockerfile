@@ -1,7 +1,8 @@
 FROM php:8.3-cli-alpine
 
 # Install system dependencies & PHP extensions needed by Laravel 13
-RUN apk add --no-cache bash curl libpng-dev libxml2-dev zip unzip git oniguruma-dev libzip-dev \
+RUN apk add --no-cache bash curl libpng-dev libxml2-dev zip unzip git oniguruma-dev libzip-dev ca-certificates \
+    && update-ca-certificates \
     && docker-php-ext-install pdo_mysql bcmath mbstring pcntl
 
 # Install Composer
@@ -21,4 +22,4 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "php artisan config:clear && php artisan route:clear && (php artisan migrate --force || true) && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
+CMD ["sh", "-c", "php artisan config:clear && php artisan route:clear && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
