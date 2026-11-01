@@ -46,7 +46,153 @@ Aplikasi telah berhasil di-deploy dan dapat diakses langsung secara publik:
 
 ---
 
-## 3. Akun Pengguna Bawaan (Default Demo Accounts)
+## 3. Arsitektur Model-View-Controller (MVC)
+
+Sistem mengimplementasikan pola **Modern Decoupled MVC (API-Driven MVC)** yang memisahkan tanggung jawab (*Separation of Concerns*) antara logika data di server dengan presentasi antarmuka di klien:
+
+```mermaid
+flowchart TD
+    subgraph Client["VIEW LAYER (Client - React 19 SPA)"]
+        UI["Antarmuka Modern (Bootstrap 5 & Phosphor Icons)"]
+        State["State Management & Auth Context"]
+        Axios["HTTP Client (Axios Interceptor + Bearer Token)"]
+    end
+
+    subgraph Server["BACKEND LAYER (Server - Laravel 13)"]
+        Route["API Routing (routes/api.php)"]
+        MW["Middleware (auth:sanctum & RoleMiddleware)"]
+        Controller["CONTROLLER LAYER (app/Http/Controllers/)"]
+        Validation["Server-Side Form Request Validation"]
+        Service["Aturan Bisnis & DB Transaction (Atomicity)"]
+        Model["MODEL LAYER (app/Models/ - Eloquent ORM)"]
+    end
+
+    subgraph Database["DATABASE LAYER (MySQL / TiDB Cloud)"]
+        DB[(14 Tabel Relasional Ternormalisasi)]
+    end
+
+    UI --> State
+    State --> Axios
+    Axios -->|HTTP Request / JSON| Route
+    Route --> MW
+    MW --> Controller
+    Controller --> Validation
+    Validation --> Service
+    Service --> Model
+    Model -->|Parameterized Queries & Row Locking| DB
+    DB -->|Query Result Set| Model
+    Model --> Service
+    Service --> Controller
+    Controller -->|Standardized JSON Response| Axios
+    Axios --> State
+    State --> UI
+```
+
+### 3.1 Pemetaan Komponen MVC
+
+1. **Model (M) — `backend/app/Models/`**
+   - Mengelola representasi entitas data bisnis, pendefinisian relasi objek (*Eloquent ORM*), *attribute casting*, dan proteksi *mass-assignment* (`$fillable`).
+   - Terdapat **14 Model Eloquent**, di antaranya:
+     - `Product` & `ProductVariant`: Master artikel sepatu/sandal dan varian SKU per ukuran/warna.
+     - `RawMaterial` & `Supplier`: Master bahan baku dan data vendor pemasok.
+     - `BomDetail`: Relasi resep bahan baku per model produk.
+     - `PurchaseOrder` & `PurchaseOrderDetail`: Entitas pengadaan bahan baku.
+     - `ProductionOrder` & `ProductionOrderDetail`: Entitas perencanaan manufaktur Make to Stock dan pencatatan hasil QC.
+     - `InventoryStock`: Entitas saldo stok fisik real-time untuk gudang bahan dan gudang jadi.
+     - `Partner` & `PartnerOrder`: Entitas reseller/distributor dan pesanan distribusi.
+     - `User`: Entitas akun pengguna dan otorisasi peran sistem.
+
+2. **View (V) — `frontend/src/pages/` & `frontend/src/components/`**
+   - Bertanggung jawab penuh terhadap penyajian antarmuka pengguna (*User Interface*), menangkap interaksi pengguna (input form, filter data, aksi transaksi), dan me-render data dinamis.
+   - Dibangun menggunakan **React 19**, **Bootstrap 5**, dan sistem desain **Clean Modern (UI/UX Pro Max)**.
+   - Contoh View:
+     - `ProductList.jsx` & `ProductDetail.jsx`: Menampilkan katalog produk, varian SKU, dan komposisi BOM.
+     - `ProductionOrderCreate.jsx` & `ProductionOrderDetail.jsx`: Formulir kalkulasi kebutuhan bahan baku dan pencatatan hasil inspeksi mutu (QC).
+     - `InventoryOverview.jsx`: Visualisasi kartu stok bahan baku, stok barang jadi, dan safety stock indicator.
+
+3. **Controller (C) — `backend/app/Http/Controllers/`**
+   - Bertindak sebagai pengatur alur logika bisnis dan penghubung antara View dan Model.
+   - Menerima request dari routing, menjalankan **validasi input server-side yang ketat** (`$request->validate()`), mengeksekusi operasi transaksi atomik (`DB::transaction`), menerapkan *pessimistic row-locking* (`lockForUpdate()`), dan mengembalikan respon terstandarisasi (`success`, `message`, `data`).
+   - Contoh Controller:
+     - `AuthController.php`: Mengelola autentikasi login via Laravel Sanctum dan token revocation.
+     - `ProductController.php` & `ProductVariantController.php`: Operasi CRUD penuh model produk dan varian SKU.
+     - `PurchaseOrderController.php`: Pembuatan PO dan penerimaan bahan ke gudang (*Procurement Lifecycle*).
+     - `ProductionOrderController.php`: Kalkulasi kebutuhan bahan baku otomatis, validasi kecukupan stok bahan, eksekusi pemotongan bahan, dan pencatatan hasil QC.
+     - `PartnerOrderController.php`: Siklus pesanan mitra dan pemotongan stok barang jadi saat pengiriman nomor resi.
+
+### 3.2 Siklus Alur Permintaan (Request Lifecycle MVC)
+```text
+[Aksi User di Browser] 
+    └──► React View mengirim HTTP Request (Axios) membawa Bearer Token
+            └──► Laravel Router (routes/api.php) memetakan rute HTTP
+                    └──► Middleware memverifikasi token Sanctum & Hak Akses Role
+                            └──► Controller memvalidasi input server-side
+                                    └──► Controller memanggil Model Eloquent
+                                            └──► Model mengeksekusi query aman ke MySQL (Parameterized)
+                                                    └──► Controller menyusun Respon JSON
+                                                            └──► React View memperbarui State & UI (tanpa reload halaman)
+```
+
+---
+
+## 4. Desain Basis Data & Skema ERD
+
+Sistem menerapkan basis data relasional **MySQL (TiDB Cloud)** ternormalisasi (3NF) dengan **14 tabel bisnis relasional** yang terbagi ke dalam 4 pilar rantai pasok:
+
+```mermaid
+erDiagram
+    USERS ||--o{ PURCHASE_ORDERS : "creates"
+    USERS ||--o{ PRODUCTION_ORDERS : "creates"
+    USERS ||--o{ PRODUCTION_ORDER_DETAILS : "checks_qc"
+    USERS ||--o{ PARTNER_ORDERS : "creates"
+
+    SUPPLIERS ||--o{ PURCHASE_ORDERS : "supplies"
+    PURCHASE_ORDERS ||--|{ PURCHASE_ORDER_DETAILS : "contains"
+    RAW_MATERIALS ||--o{ PURCHASE_ORDER_DETAILS : "ordered_in"
+
+    PRODUCTS ||--o{ PRODUCT_VARIANTS : "has"
+    PRODUCTS ||--o{ BOM_DETAILS : "uses"
+    RAW_MATERIALS ||--o{ BOM_DETAILS : "required_for"
+
+    PRODUCTS ||--o{ PRODUCTION_ORDERS : "planned_in"
+    PRODUCTION_ORDERS ||--|{ PRODUCTION_ORDER_DETAILS : "contains"
+    PRODUCT_VARIANTS ||--o{ PRODUCTION_ORDER_DETAILS : "produced_in"
+
+    RAW_MATERIALS o|--o{ INVENTORY_STOCKS : "stocked_in"
+    PRODUCT_VARIANTS o|--o{ INVENTORY_STOCKS : "stocked_in"
+
+    PARTNERS ||--o{ PARTNER_ORDERS : "places"
+    PARTNER_ORDERS ||--|{ PARTNER_ORDER_DETAILS : "contains"
+    PRODUCT_VARIANTS ||--o{ PARTNER_ORDER_DETAILS : "ordered_in"
+```
+
+### 4.1 Empat Klaster Tabel Basis Data
+
+| Klaster | Tabel | Fungsi & Integritas |
+|---|---|---|
+| **A. Master Data & Pengguna** | `users` | Akun staf dengan 3 peran: `super_admin`, `supply_chain`, `production`. |
+| | `products` | Model dasar artikel produk sepatu/sandal (shoes, sandals). |
+| | `product_variants` | Varian spesifik (ukuran & warna) dengan **SKU Unik** (BR-01). |
+| | `raw_materials` | Master bahan baku dengan batas safety stock minimum (`minimum_stock`). |
+| | `suppliers` | Data perusahaan rekanan vendor pemasok bahan. |
+| | `partners` | Data toko retail, reseller, dan distributor rekanan pabrik. |
+| **B. Pengadaan (Procurement)** | `purchase_orders` | Header pemesanan bahan baku dengan status: `ordered`, `completed`, `cancelled`. |
+| | `purchase_order_details` | Rincian bahan, kuantitas dipesan, dan pencatatan fisik kuantitas diterima (BR-04, BR-05). |
+| **C. Manufaktur & QC (Production)** | `bom_details` | Resep Bill of Materials (Many-to-Many antara produk dan bahan baku) (BR-02). |
+| | `production_orders` | Header perintah kerja Make to Stock (MTS) dengan nomor produksi unik. |
+| | `production_order_details` | Rincian target varian, hasil aktual, jumlah lolos QC, dan reject (BR-11, BR-12, BR-13). |
+| **D. Inventaris & Penjualan** | `inventory_stocks` | Saldo stok fisik real-time terpadu untuk Gudang Bahan dan Gudang Barang Jadi. |
+| | `partner_orders` | Header pesanan penjualan mitra dengan status pengiriman dan nomor resi (BR-15). |
+| | `partner_order_details` | Rincian varian produk yang dipesan, harga satuan, dan subtotal penjualan. |
+
+### 4.2 Integritas Relasional & Penanganan Konkurensi
+1. **Foreign Key Integrity:** Menerapkan constraint relasional antar-tabel dengan aturan `ON DELETE RESTRICT` pada master data aktif untuk mencegah kehilangan jejak audit transaksi historis.
+2. **Kunci Unik (Unique Constraints):** Memastikan tidak terjadi duplikasi SKU (`product_variants.sku`), nomor dokumen (`po_number`, `production_number`, `order_number`), maupun stok per lokasi gudang (`unique_raw_material_stock` dan `unique_variant_stock`).
+3. **Pessimistic Locking & Transaksi Atomik:** Setiap mutasi penambahan atau pengurangan saldo stok di tabel `inventory_stocks` diisolasi di dalam blok `DB::transaction()` dan dikunci menggunakan `lockForUpdate()` untuk mencegah kondisi *race condition* dan menjamin nilai stok tidak pernah negatif (BR-17).
+
+---
+
+## 5. Akun Pengguna Bawaan (Default Demo Accounts)
 
 Sistem telah dilengkapi data awal (seed) dengan 3 role pengguna operasional. Semua akun menggunakan kata sandi default: `password123`.
 
@@ -60,9 +206,9 @@ Sistem telah dilengkapi data awal (seed) dengan 3 role pengguna operasional. Sem
 
 ---
 
-## 4. Panduan Menjalankan Secara Lokal (Local Development)
+## 6. Panduan Menjalankan Secara Lokal (Local Development)
 
-### 4.1 Prasyarat Sistem Lokal
+### 6.1 Prasyarat Sistem Lokal
 - PHP 8.3 atau 8.4+ (dengan ekstensi `pdo_mysql`, `mbstring`, `openssl`, `bcmath`)
 - Composer 2.x
 - Node.js 18+ dan npm
@@ -70,7 +216,7 @@ Sistem telah dilengkapi data awal (seed) dengan 3 role pengguna operasional. Sem
 
 ---
 
-### 4.2 Langkah 1: Menjalankan Backend (Laravel 13)
+### 6.2 Langkah 1: Menjalankan Backend (Laravel 13)
 
 1. Masuk ke direktori `backend`:
    ```bash
@@ -107,7 +253,7 @@ Sistem telah dilengkapi data awal (seed) dengan 3 role pengguna operasional. Sem
 
 ---
 
-### 4.3 Langkah 2: Menjalankan Frontend (React + Vite)
+### 6.3 Langkah 2: Menjalankan Frontend (React + Vite)
 
 1. Buka terminal baru dan masuk ke direktori `frontend`:
    ```bash
@@ -132,7 +278,7 @@ Sistem telah dilengkapi data awal (seed) dengan 3 role pengguna operasional. Sem
 
 ---
 
-## 5. Implementasi Aturan Bisnis (Business Rules)
+## 7. Implementasi Aturan Bisnis (Business Rules)
 
 Sistem menerapkan secara ketat 17 Business Rules dari PRD v2.6:
 
@@ -151,7 +297,7 @@ Sistem menerapkan secara ketat 17 Business Rules dari PRD v2.6:
 
 ---
 
-## 6. Struktur Direktori Proyek
+## 8. Struktur Direktori Proyek
 
 ```text
 nexora-supplyflow-management-system/
@@ -193,7 +339,7 @@ nexora-supplyflow-management-system/
 
 ---
 
-## 7. Pengujian API Otomatis (Feature Testing)
+## 9. Pengujian API Otomatis (Feature Testing)
 
 Backend telah dilengkapi dengan pengujian otomatis:
 ```bash
@@ -209,7 +355,7 @@ php artisan test --filter=SupplyFlowApiTest
 
 ---
 
-## 8. Lisensi & Hak Cipta
+## 10. Lisensi & Hak Cipta
 
 Dikembangkan untuk memenuhi Deliverables Ujian Akhir Semester (UAS) mata kuliah Web Application Development (WAD).  
 All rights reserved © 2026.
