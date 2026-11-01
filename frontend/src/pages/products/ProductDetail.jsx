@@ -6,11 +6,8 @@ import {
   ArrowLeft, 
   Plus, 
   Tag, 
-  CheckCircle, 
-  Package, 
   Trash, 
-  FloppyDisk,
-  WarningCircle
+  FloppyDisk
 } from '@phosphor-icons/react';
 
 export const ProductDetail = () => {
@@ -30,11 +27,6 @@ export const ProductDetail = () => {
   const [bomRows, setBomRows] = useState([]);
   const [bomError, setBomError] = useState('');
   const [bomSuccess, setBomSuccess] = useState('');
-
-  useEffect(() => {
-    fetchProductDetails();
-    fetchRawMaterials();
-  }, [id]);
 
   const fetchProductDetails = async () => {
     try {
@@ -66,6 +58,11 @@ export const ProductDetail = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    fetchProductDetails();
+    fetchRawMaterials();
+  }, [id]);
 
   const handleAddVariant = async (e) => {
     e.preventDefault();

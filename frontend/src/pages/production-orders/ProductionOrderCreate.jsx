@@ -4,12 +4,8 @@ import api from '../../services/api';
 import { 
   ArrowLeft, 
   Factory, 
-  Plus, 
-  Trash, 
   CheckCircle, 
-  WarningCircle, 
-  Calendar,
-  Sneaker
+  WarningCircle
 } from '@phosphor-icons/react';
 
 export const ProductionOrderCreate = () => {
@@ -30,9 +26,17 @@ export const ProductionOrderCreate = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product);
+    // Initialize targets for each variant of this product
+    const initialTargets = {};
+    if (product.variants) {
+      product.variants.forEach(v => {
+        initialTargets[v.id] = 20; // default 20 units
+      });
+    }
+    setVariantTargets(initialTargets);
+  };
 
   const fetchProducts = async () => {
     try {
@@ -49,17 +53,9 @@ export const ProductionOrderCreate = () => {
     }
   };
 
-  const handleSelectProduct = (product) => {
-    setSelectedProduct(product);
-    // Initialize targets for each variant of this product
-    const initialTargets = {};
-    if (product.variants) {
-      product.variants.forEach(v => {
-        initialTargets[v.id] = 20; // default 20 units
-      });
-    }
-    setVariantTargets(initialTargets);
-  };
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // Check requirements whenever variantTargets change
   useEffect(() => {

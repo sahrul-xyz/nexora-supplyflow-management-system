@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { 
   Sparkle, 
-  X, 
   ArrowClockwise, 
   CheckCircle, 
   WarningCircle, 
@@ -17,8 +16,6 @@ import {
 } from '@phosphor-icons/react';
 
 export const AiDiagnosticModal = ({ show, onClose }) => {
-  if (!show) return null;
-
   const [scanning, setScanning] = useState(true);
   const [scanStep, setScanStep] = useState(0);
   const [data, setData] = useState(null);
@@ -33,6 +30,7 @@ export const AiDiagnosticModal = ({ show, onClose }) => {
   ];
 
   useEffect(() => {
+    if (!show) return;
     let isMounted = true;
     let intervalId = null;
     let timeoutId = null;
@@ -75,7 +73,9 @@ export const AiDiagnosticModal = ({ show, onClose }) => {
       if (intervalId) clearInterval(intervalId);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [show]);
+
+  if (!show) return null;
 
   const runDiagnostic = async () => {
     setScanning(true);

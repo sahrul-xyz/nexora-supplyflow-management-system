@@ -8,22 +8,18 @@ import { AiDiagnosticModal } from '../../components/AiDiagnosticModal';
 import { 
   Package, 
   TrendUp, 
-  Clock, 
   CurrencyCircleDollar, 
   Truck, 
-  WarningCircle, 
   CheckCircle, 
   Sparkle, 
   ArrowRight, 
   CaretRight,
   CheckSquare,
   Square,
-  Sneaker,
   Factory,
   CaretDown,
   ArrowClockwise,
-  ShieldCheck,
-  Barcode
+  ShieldCheck
 } from '@phosphor-icons/react';
 
 export const Dashboard = () => {
@@ -34,10 +30,6 @@ export const Dashboard = () => {
   const [forecastScenario, setForecastScenario] = useState('all'); // 'all', 'forecast', 'high', 'low'
   const [scenarioDropdown, setScenarioDropdown] = useState(false);
   const [actionDone, setActionDone] = useState([false, false, false]);
-
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
 
   const fetchDashboard = async () => {
     try {
@@ -53,6 +45,10 @@ export const Dashboard = () => {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
 
   const toggleAction = (idx) => {
     const updated = [...actionDone];

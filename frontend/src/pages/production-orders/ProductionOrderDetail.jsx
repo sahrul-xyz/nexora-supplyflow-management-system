@@ -11,8 +11,7 @@ import {
   WarningCircle, 
   Calendar, 
   User, 
-  Sneaker,
-  ShieldCheck,
+  ShieldCheck, 
   XCircle
 } from '@phosphor-icons/react';
 
@@ -32,10 +31,6 @@ export const ProductionOrderDetail = () => {
   const [qcResults, setQcResults] = useState({});
   const [qcSubmitting, setQcSubmitting] = useState(false);
   const [qcError, setQcError] = useState('');
-
-  useEffect(() => {
-    fetchOrder();
-  }, [id]);
 
   const fetchOrder = async () => {
     try {
@@ -63,6 +58,10 @@ export const ProductionOrderDetail = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrder();
+  }, [id]);
 
   const handleStartProduction = async () => {
     if (!window.confirm('Mulai produksi sekarang? Stok bahan baku yang dibutuhkan akan otomatis dikurangi dari gudang (BR-10).')) {

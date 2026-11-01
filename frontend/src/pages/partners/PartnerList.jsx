@@ -2,14 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
-  Users, 
   Plus, 
   MagnifyingGlass, 
   Phone, 
-  Envelope, 
   PencilSimple, 
   Truck,
-  CheckCircle,
   Tag
 } from '@phosphor-icons/react';
 
@@ -36,10 +33,6 @@ export const PartnerList = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchPartners();
-  }, [typeFilter]);
-
   const fetchPartners = async () => {
     try {
       setLoading(true);
@@ -56,6 +49,10 @@ export const PartnerList = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPartners();
+  }, [typeFilter]);
 
   const handleSearch = (e) => {
     e.preventDefault();

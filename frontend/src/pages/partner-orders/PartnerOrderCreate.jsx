@@ -6,9 +6,7 @@ import {
   Truck, 
   Plus, 
   Trash, 
-  Sneaker, 
-  WarningCircle, 
-  Users 
+  WarningCircle
 } from '@phosphor-icons/react';
 
 export const PartnerOrderCreate = () => {
@@ -28,10 +26,6 @@ export const PartnerOrderCreate = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchPrerequisites();
-  }, []);
 
   const fetchPrerequisites = async () => {
     try {
@@ -59,6 +53,10 @@ export const PartnerOrderCreate = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPrerequisites();
+  }, []);
 
   const handlePartnerChange = (id) => {
     setPartnerId(id);

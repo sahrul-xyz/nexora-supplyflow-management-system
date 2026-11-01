@@ -3,7 +3,6 @@ import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { StockAdjustModal } from '../../components/StockAdjustModal';
 import { 
-  Package, 
   Plus, 
   MagnifyingGlass, 
   WarningCircle, 
@@ -11,7 +10,6 @@ import {
   PencilSimple,
   SlidersHorizontal,
   Trash,
-  DotsThreeVertical,
   ArrowClockwise
 } from '@phosphor-icons/react';
 
@@ -40,10 +38,6 @@ export const RawMaterialList = () => {
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [selectedStockItem, setSelectedStockItem] = useState(null);
 
-  useEffect(() => {
-    fetchMaterials();
-  }, []);
-
   const fetchMaterials = async () => {
     try {
       setLoading(true);
@@ -57,6 +51,10 @@ export const RawMaterialList = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchMaterials();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();

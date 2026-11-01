@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
-  ShieldCheck, 
   Plus, 
   Trash, 
   PencilSimple, 
-  UserCircle, 
-  Envelope, 
-  LockKey 
+  UserCircle
 } from '@phosphor-icons/react';
 
 export const UserManagement = () => {
@@ -29,10 +26,6 @@ export const UserManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -46,6 +39,10 @@ export const UserManagement = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const openCreateModal = () => {
     setIsEditing(false);

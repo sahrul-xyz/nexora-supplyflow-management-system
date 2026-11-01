@@ -4,14 +4,11 @@ import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { StatusBadge } from '../../components/StatusBadge';
 import { 
-  Factory, 
   Plus, 
   MagnifyingGlass, 
-  Play, 
   CheckCircle, 
   Eye, 
-  Calendar,
-  Sneaker
+  Calendar
 } from '@phosphor-icons/react';
 
 export const ProductionOrderList = () => {
@@ -20,10 +17,6 @@ export const ProductionOrderList = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-
-  useEffect(() => {
-    fetchOrders();
-  }, [statusFilter]);
 
   const fetchOrders = async () => {
     try {
@@ -41,6 +34,10 @@ export const ProductionOrderList = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [statusFilter]);
 
   const handleSearch = (e) => {
     e.preventDefault();

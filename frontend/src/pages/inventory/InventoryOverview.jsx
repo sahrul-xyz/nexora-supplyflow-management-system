@@ -3,15 +3,13 @@ import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { StockAdjustModal } from '../../components/StockAdjustModal';
 import { 
-  Warehouse, 
   Package, 
   Sneaker, 
   WarningCircle, 
   CheckCircle, 
   MagnifyingGlass,
   ArrowClockwise,
-  SlidersHorizontal,
-  Trash
+  SlidersHorizontal
 } from '@phosphor-icons/react';
 
 export const InventoryOverview = () => {
@@ -26,10 +24,6 @@ export const InventoryOverview = () => {
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  useEffect(() => {
-    fetchInventory();
-  }, []);
-
   const fetchInventory = async () => {
     try {
       setLoading(true);
@@ -43,6 +37,10 @@ export const InventoryOverview = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
 
   const openAdjustRaw = (rm) => {
     setSelectedItem({

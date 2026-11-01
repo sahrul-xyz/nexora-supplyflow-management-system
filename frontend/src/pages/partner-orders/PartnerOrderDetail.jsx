@@ -10,8 +10,6 @@ import {
   XCircle, 
   Calendar, 
   User, 
-  MapPin, 
-  Tag, 
   Barcode 
 } from '@phosphor-icons/react';
 
@@ -33,10 +31,6 @@ export const PartnerOrderDetail = () => {
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
 
-  useEffect(() => {
-    fetchOrder();
-  }, [id]);
-
   const fetchOrder = async () => {
     try {
       setLoading(true);
@@ -51,6 +45,10 @@ export const PartnerOrderDetail = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrder();
+  }, [id]);
 
   const handleShipOrder = async (e) => {
     e.preventDefault();

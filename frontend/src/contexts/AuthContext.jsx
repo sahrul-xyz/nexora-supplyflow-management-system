@@ -11,6 +11,21 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
 
+  const logout = async () => {
+    try {
+      if (token) {
+        await api.post('/logout');
+      }
+    } catch {
+      // ignore
+    } finally {
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    }
+  };
+
   useEffect(() => {
     const verifyUser = async () => {
       if (token) {
@@ -42,21 +57,6 @@ export const AuthProvider = ({ children }) => {
       return userData;
     }
     throw new Error(response.data?.message || 'Login gagal.');
-  };
-
-  const logout = async () => {
-    try {
-      if (token) {
-        await api.post('/logout');
-      }
-    } catch (e) {
-      // ignore
-    } finally {
-      setUser(null);
-      setToken(null);
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    }
   };
 
   const hasRole = (allowedRoles = []) => {

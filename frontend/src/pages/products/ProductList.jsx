@@ -3,14 +3,10 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
-  Sneaker, 
   Plus, 
   MagnifyingGlass, 
   Tag, 
-  Stack, 
-  ArrowRight,
   CheckCircle,
-  XCircle,
   Eye
 } from '@phosphor-icons/react';
 
@@ -32,10 +28,6 @@ export const ProductList = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchProducts();
-  }, [category]);
-
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -52,6 +44,10 @@ export const ProductList = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, [category]);
 
   const handleSearch = (e) => {
     e.preventDefault();

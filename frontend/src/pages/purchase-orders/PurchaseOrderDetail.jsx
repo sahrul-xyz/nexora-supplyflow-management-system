@@ -7,10 +7,8 @@ import {
   ArrowLeft, 
   ShoppingCart, 
   CheckCircle, 
-  Truck, 
   Calendar, 
-  User, 
-  FileText 
+  User
 } from '@phosphor-icons/react';
 
 export const PurchaseOrderDetail = () => {
@@ -21,10 +19,6 @@ export const PurchaseOrderDetail = () => {
   const [receiving, setReceiving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchPo();
-  }, [id]);
 
   const fetchPo = async () => {
     try {
@@ -39,6 +33,10 @@ export const PurchaseOrderDetail = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPo();
+  }, [id]);
 
   const handleReceiveMaterials = async () => {
     if (!window.confirm(`Catat penerimaan penuh untuk PO ${po.po_number}? Seluruh stok bahan baku terkait akan ditambahkan ke gudang.`)) {

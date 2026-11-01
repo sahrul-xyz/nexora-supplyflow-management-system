@@ -12,13 +12,7 @@ import {
   CurrencyCircleDollar, 
   ArrowRight, 
   Lightning, 
-  ChartLineUp, 
-  Sliders, 
-  Cpu, 
-  TerminalWindow,
-  FileText,
-  TrendUp,
-  ArrowsClockwise
+  TerminalWindow
 } from '@phosphor-icons/react';
 
 export const AiInsightsPage = () => {
@@ -39,10 +33,10 @@ export const AiInsightsPage = () => {
     '[HEURISTICS] Algoritma SCM Health Score siap dijalankan.'
   ]);
 
-  useEffect(() => {
-    fetchInsights();
-    fetchSimulation(20);
-  }, []);
+  const addLog = (msg) => {
+    const time = new Date().toLocaleTimeString('id-ID');
+    setDiagnosticLogs(prev => [`[${time}] ${msg}`, ...prev.slice(0, 7)]);
+  };
 
   const fetchInsights = async () => {
     try {
@@ -77,10 +71,10 @@ export const AiInsightsPage = () => {
     }
   };
 
-  const addLog = (msg) => {
-    const time = new Date().toLocaleTimeString('id-ID');
-    setDiagnosticLogs(prev => [`[${time}] ${msg}`, ...prev.slice(0, 7)]);
-  };
+  useEffect(() => {
+    fetchInsights();
+    fetchSimulation(20);
+  }, []);
 
   const getScoreColor = (score) => {
     if (score >= 80) return '#10B981';

@@ -5,7 +5,6 @@ import api from '../services/api';
 import { 
   SquaresFour, 
   Warehouse, 
-  TrendUp, 
   Truck, 
   Handshake, 
   Package, 
@@ -13,7 +12,6 @@ import {
   Gear, 
   MagnifyingGlass, 
   CalendarBlank, 
-  Funnel, 
   Sun, 
   Moon, 
   Globe, 
@@ -21,16 +19,12 @@ import {
   CaretLeft, 
   CaretRight,
   SignOut,
-  UserCircle,
   Sneaker,
-  ShieldCheck,
   Factory,
   ShoppingCart,
   CheckCircle,
   ArrowRight,
-  WarningCircle,
-  Sparkle,
-  X
+  Sparkle
 } from '@phosphor-icons/react';
 
 export const MainLayout = () => {
@@ -67,11 +61,6 @@ export const MainLayout = () => {
     }
   }, [darkMode]);
 
-  // Fetch real notifications from dashboard alerts
-  useEffect(() => {
-    fetchNotifications();
-  }, [location.pathname]);
-
   const fetchNotifications = async () => {
     try {
       const res = await api.get('/dashboard');
@@ -79,10 +68,15 @@ export const MainLayout = () => {
         setNotifications(res.data.data.alerts);
         setUnreadCount(res.data.data.alerts.length);
       }
-    } catch (err) {
+    } catch {
       // Ignore background fetch error
     }
   };
+
+  // Fetch real notifications from dashboard alerts
+  useEffect(() => {
+    fetchNotifications();
+  }, [location.pathname]);
 
   const markAllRead = () => {
     setUnreadCount(0);

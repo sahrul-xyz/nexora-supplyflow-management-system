@@ -1,24 +1,21 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 import { 
-  X, 
   MinusCircle, 
   PlusCircle, 
   PencilSimple, 
   Trash, 
-  WarningCircle, 
-  CheckCircle,
-  ArrowRight
+  WarningCircle
 } from '@phosphor-icons/react';
 
 export const StockAdjustModal = ({ show, onClose, onSuccess, item }) => {
-  if (!show || !item) return null;
-
   const [action, setAction] = useState('reduce'); // 'reduce', 'add', 'set', 'reset'
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  if (!show || !item) return null;
 
   const currentStock = parseFloat(item.current_stock) || 0;
   const numQty = parseFloat(quantity) || 0;

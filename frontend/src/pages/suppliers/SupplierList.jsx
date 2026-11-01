@@ -9,8 +9,7 @@ import {
   Envelope, 
   MapPin, 
   PencilSimple, 
-  Trash,
-  ShoppingCart
+  Trash
 } from '@phosphor-icons/react';
 
 export const SupplierList = () => {
@@ -33,10 +32,6 @@ export const SupplierList = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, []);
-
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
@@ -50,6 +45,10 @@ export const SupplierList = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();

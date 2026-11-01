@@ -5,9 +5,7 @@ import {
   ArrowLeft, 
   Plus, 
   Trash, 
-  ShoppingCart, 
-  CheckCircle,
-  CurrencyCircleDollar
+  ShoppingCart
 } from '@phosphor-icons/react';
 
 export const PurchaseOrderCreate = () => {
@@ -25,10 +23,6 @@ export const PurchaseOrderCreate = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchPrerequisites();
-  }, []);
 
   const fetchPrerequisites = async () => {
     try {
@@ -55,6 +49,10 @@ export const PurchaseOrderCreate = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPrerequisites();
+  }, []);
 
   const handleAddItem = () => {
     if (rawMaterials.length === 0) return;
