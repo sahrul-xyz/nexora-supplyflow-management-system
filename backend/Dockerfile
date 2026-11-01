@@ -1,4 +1,4 @@
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 
 # Install system dependencies & PHP extensions needed by Laravel 13
 RUN apk add --no-cache bash curl libpng-dev libxml2-dev zip unzip git oniguruma-dev libzip-dev ca-certificates \
@@ -14,7 +14,7 @@ WORKDIR /var/www
 COPY . /var/www
 
 # Install PHP dependencies without dev packages
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-req=php+
 
 # Directory permissions for Laravel storage & cache
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
