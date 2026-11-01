@@ -153,4 +153,46 @@ class SupplyFlowApiTest extends TestCase
         $validQcResponse->assertStatus(200)
             ->assertJsonPath('data.status', 'completed');
     }
+
+    public function test_stock_adjustment_add_and_reduce_raw_material()
+    {
+        $admin = User::where('email', 'admin@supplyflow.com')->first();
+        $token = $admin->createToken('test')->plainTextToken;
+        $material = RawMaterial::first();
+
+        // 1. Add 50 units
+        $addRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/inventory-stocks/adjust', [
+                'warehouse_type' => 'raw_material',
+                'raw_material_id' => $material->id,
+                'action' => 'add',
+                'quantity' => 50,
+                'notes' => 'Test tambah stok',
+            ]);
+        $addRes->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        // 2. Reduce 20 units
+        $reduceRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/inventory-stocks/adjust', [
+                'warehouse_type' => 'raw_material',
+                'raw_material_id' => $material->id,
+                'action' => 'reduce',
+                'quantity' => 20,
+                'notes' => 'Test kurangi stok',
+            ]);
+        $reduceRes->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        // 3. Try to reduce more than available (should fail with 422)
+        $excessRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/inventory-stocks/adjust', [
+                'warehouse_type' => 'raw_material',
+                'raw_material_id' => $material->id,
+                'action' => 'reduce',
+                'quantity' => 9999999,
+            ]);
+        $excessRes->assertStatus(422)
+            ->assertJsonPath('success', false);
+    }
 }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { StockAdjustModal } from '../../components/StockAdjustModal';
 import { 
   Warehouse, 
   Package, 
@@ -7,14 +9,22 @@ import {
   WarningCircle, 
   CheckCircle, 
   MagnifyingGlass,
-  ArrowClockwise
+  ArrowClockwise,
+  SlidersHorizontal,
+  Trash
 } from '@phosphor-icons/react';
 
 export const InventoryOverview = () => {
+  const { hasRole } = useAuth();
   const [activeTab, setActiveTab] = useState('raw'); // 'raw' or 'finished'
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Stock Adjustment Modal
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     fetchInventory();
@@ -34,6 +44,34 @@ export const InventoryOverview = () => {
     }
   };
 
+  const openAdjustRaw = (rm) => {
+    setSelectedItem({
+      warehouse_type: 'raw_material',
+      id: rm.id,
+      name: `${rm.material_name} (${rm.material_code})`,
+      unit: rm.unit,
+      current_stock: rm.current_stock,
+    });
+    setShowAdjustModal(true);
+  };
+
+  const openAdjustFinished = (g) => {
+    setSelectedItem({
+      warehouse_type: 'finished_goods',
+      id: g.id,
+      name: `${g.product_name} - SKU: ${g.sku} (Size ${g.size}, ${g.color})`,
+      unit: 'Pasang',
+      current_stock: g.current_stock,
+    });
+    setShowAdjustModal(true);
+  };
+
+  const handleAdjustmentSuccess = (msg) => {
+    setSuccessMessage(msg);
+    fetchInventory();
+    setTimeout(() => setSuccessMessage(''), 6000);
+  };
+
   const rawMaterials = data?.raw_materials?.filter(m => 
     !search || m.material_name.toLowerCase().includes(search.toLowerCase()) || m.material_code.toLowerCase().includes(search.toLowerCase())
   ) || [];
@@ -49,7 +87,7 @@ export const InventoryOverview = () => {
         <div>
           <h2 className="fw-bold mb-1">Monitoring Stok Pergudangan</h2>
           <p className="text-muted small mb-0">
-            Pelacakan real-time ketersediaan Gudang Bahan Baku dan Gudang Barang Jadi (Sepatu & Sandal)
+            Pelacakan & pengelolaan real-time stok Gudang Bahan Baku dan Gudang Barang Jadi (Sepatu & Sandal)
           </p>
         </div>
         <button className="btn btn-outline-secondary btn-sm" onClick={fetchInventory} disabled={loading}>
@@ -57,6 +95,16 @@ export const InventoryOverview = () => {
           <span>Segarkan Data Stok</span>
         </button>
       </div>
+
+      {successMessage && (
+        <div className="alert alert-success py-2 px-3 small rounded-3 d-flex align-items-center justify-content-between mb-4">
+          <div className="d-flex align-items-center gap-2">
+            <CheckCircle size={18} weight="bold" />
+            <span>{successMessage}</span>
+          </div>
+          <button type="button" className="btn-close btn-sm" onClick={() => setSuccessMessage('')}></button>
+        </div>
+      )}
 
       {/* Summary KPI Badges */}
       <div className="row g-3 mb-4">
@@ -161,15 +209,16 @@ export const InventoryOverview = () => {
                   <th>Kode Bahan</th>
                   <th>Nama Bahan Baku</th>
                   <th>Satuan</th>
-                  <th>Batas Minimum (Safety)</th>
+                  <th>Batas Min. (Safety)</th>
                   <th>Stok Fisik Saat Ini</th>
                   <th>Status Persediaan</th>
+                  <th className="text-end">Aksi Penyesuaian</th>
                 </tr>
               </thead>
               <tbody>
                 {rawMaterials.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center py-4 text-muted">
+                    <td colSpan="7" className="text-center py-4 text-muted">
                       Tidak ditemukan bahan baku di gudang.
                     </td>
                   </tr>
@@ -185,7 +234,7 @@ export const InventoryOverview = () => {
                       </td>
                       <td>{rm.minimum_stock} {rm.unit}</td>
                       <td>
-                        <span className="fw-bold fs-6">
+                        <span className="fw-bold fs-6 text-dark">
                           {rm.current_stock} {rm.unit}
                         </span>
                       </td>
@@ -193,13 +242,25 @@ export const InventoryOverview = () => {
                         {rm.is_low_stock ? (
                           <span className="badge-clean badge-warning-low">
                             <WarningCircle size={14} weight="bold" />
-                            <span>Di Bawah Batas Minimum</span>
+                            <span>Di Bawah Batas</span>
                           </span>
                         ) : (
                           <span className="badge-clean badge-completed">
                             <CheckCircle size={14} weight="bold" />
                             <span>Stok Aman</span>
                           </span>
+                        )}
+                      </td>
+                      <td className="text-end">
+                        {(hasRole(['supply_chain']) || hasRole(['super_admin'])) && (
+                          <button 
+                            onClick={() => openAdjustRaw(rm)}
+                            className="btn btn-sm btn-outline-primary py-1 px-3 d-inline-flex align-items-center gap-1"
+                            title="Sesuaikan stok (Tambah, Kurangi, Kosongkan)"
+                          >
+                            <SlidersHorizontal size={14} />
+                            <span>Kelola Stok</span>
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -220,12 +281,13 @@ export const InventoryOverview = () => {
                   <th>Warna</th>
                   <th>Stok Siap Kirim</th>
                   <th>Status Gudang Jadi</th>
+                  <th className="text-end">Aksi Penyesuaian</th>
                 </tr>
               </thead>
               <tbody>
                 {finishedGoods.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="text-center py-4 text-muted">
+                    <td colSpan="8" className="text-center py-4 text-muted">
                       Tidak ditemukan barang jadi di gudang.
                     </td>
                   </tr>
@@ -259,6 +321,18 @@ export const InventoryOverview = () => {
                           </span>
                         )}
                       </td>
+                      <td className="text-end">
+                        {(hasRole(['production']) || hasRole(['supply_chain']) || hasRole(['super_admin'])) && (
+                          <button 
+                            onClick={() => openAdjustFinished(g)}
+                            className="btn btn-sm btn-outline-primary py-1 px-3 d-inline-flex align-items-center gap-1"
+                            title="Sesuaikan stok barang jadi (Tambah, Kurangi, Kosongkan)"
+                          >
+                            <SlidersHorizontal size={14} />
+                            <span>Kelola Stok</span>
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -267,6 +341,14 @@ export const InventoryOverview = () => {
           </div>
         )}
       </div>
+
+      {/* Stock Adjustment Modal Component */}
+      <StockAdjustModal 
+        show={showAdjustModal}
+        onClose={() => setShowAdjustModal(false)}
+        onSuccess={handleAdjustmentSuccess}
+        item={selectedItem}
+      />
     </div>
   );
 };

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 import { 
   SquaresFour, 
   Warehouse, 
@@ -24,7 +25,11 @@ import {
   Sneaker,
   ShieldCheck,
   Factory,
-  ShoppingCart
+  ShoppingCart,
+  CheckCircle,
+  ArrowRight,
+  WarningCircle,
+  X
 } from '@phosphor-icons/react';
 
 export const MainLayout = () => {
@@ -32,9 +37,55 @@ export const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  // Dark Mode State with LocalStorage Persistence
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('supplyflow_dark_mode') === 'true';
+  });
+
+  // Notification State
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const [filterType, setFilterType] = useState('all');
+
+  // Synchronize Dark Mode Class with DOM
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
+      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('supplyflow_dark_mode', 'true');
+    } else {
+      document.documentElement.setAttribute('data-bs-theme', 'light');
+      document.documentElement.classList.remove('dark-mode');
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('supplyflow_dark_mode', 'false');
+    }
+  }, [darkMode]);
+
+  // Fetch real notifications from dashboard alerts
+  useEffect(() => {
+    fetchNotifications();
+  }, [location.pathname]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/dashboard');
+      if (res.data?.success && res.data.data?.alerts) {
+        setNotifications(res.data.data.alerts);
+        setUnreadCount(res.data.data.alerts.length);
+      }
+    } catch (err) {
+      // Ignore background fetch error
+    }
+  };
+
+  const markAllRead = () => {
+    setUnreadCount(0);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -65,8 +116,15 @@ export const MainLayout = () => {
     }
   };
 
+  const filteredNotifications = notifications.filter(item => {
+    if (filterType === 'high') return item.priority === 'High';
+    if (filterType === 'medium') return item.priority === 'Medium';
+    if (filterType === 'low') return item.priority === 'Low';
+    return true;
+  });
+
   return (
-    <div className="d-flex min-vh-100" style={{ backgroundColor: '#F4F6FA' }}>
+    <div className="d-flex min-vh-100" style={{ backgroundColor: 'var(--bg-app)' }}>
       {/* Sidebar matching Nexora reference */}
       <aside 
         className="nexora-sidebar d-flex flex-column position-fixed h-100 z-3 p-3"
@@ -74,7 +132,8 @@ export const MainLayout = () => {
           width: collapsed ? '80px' : '250px', 
           top: 0, 
           left: 0,
-          borderRight: '1px solid #EAEFF6'
+          borderRight: '1px solid var(--border-subtle)',
+          backgroundColor: 'var(--surface-card)'
         }}
       >
         {/* Brand Logo & Name */}
@@ -90,17 +149,15 @@ export const MainLayout = () => {
             <Sneaker size={22} weight="bold" />
           </div>
           {!collapsed && (
-            <div className="overflow-hidden">
-              <h5 className="mb-0 fw-bold lh-1" style={{ letterSpacing: '-0.03em', color: '#0F172A' }}>
-                SupplyFlow
-              </h5>
-              <span className="text-muted small" style={{ fontSize: '0.7rem' }}>Make to Stock SCM</span>
+            <div className="d-flex flex-column">
+              <span className="fw-bold fs-5 lh-1 text-dark" style={{ letterSpacing: '-0.02em' }}>Nexora</span>
+              <span className="text-muted small" style={{ fontSize: '0.65rem' }}>SupplyFlow SCM v2.6</span>
             </div>
           )}
         </div>
 
-        {/* Navigation Menu Links */}
-        <div className="flex-grow-1 overflow-y-auto d-flex flex-column">
+        {/* Navigation Menu */}
+        <div className="flex-grow-1 overflow-y-auto pe-1">
           <nav className="d-flex flex-column gap-1">
             <NavLink to="/" end className={({ isActive }) => `nexora-nav-item ${isActive ? 'active' : ''}`} title="Dashboard">
               <SquaresFour size={22} weight="duotone" className="flex-shrink-0" />
@@ -153,6 +210,24 @@ export const MainLayout = () => {
               {!collapsed && <span>Mitra Distribusi</span>}
             </NavLink>
 
+            {/* Sidebar Notifications Trigger */}
+            <button 
+              type="button" 
+              className={`nexora-nav-item border-0 w-100 text-start bg-transparent ${showNotificationDropdown ? 'active' : ''}`}
+              onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+              title="Notifikasi Sistem"
+            >
+              <Bell size={22} weight="duotone" className="flex-shrink-0" />
+              {!collapsed && (
+                <div className="d-flex align-items-center justify-content-between flex-grow-1">
+                  <span>Notifikasi</span>
+                  {unreadCount > 0 && (
+                    <span className="badge rounded-pill bg-danger" style={{ fontSize: '0.65rem' }}>{unreadCount}</span>
+                  )}
+                </div>
+              )}
+            </button>
+
             {user?.role === 'super_admin' && (
               <NavLink to="/users" className={({ isActive }) => `nexora-nav-item ${isActive ? 'active' : ''}`} title="Pengaturan Akun">
                 <Gear size={22} weight="duotone" className="flex-shrink-0" />
@@ -164,13 +239,14 @@ export const MainLayout = () => {
 
         {/* Bottom Section: Theme Switch, Org Pill, Collapse button */}
         <div className="pt-3 border-top d-flex flex-column gap-3">
-          {/* Light/Dark Toggle Pill matching reference */}
+          {/* Light/Dark Toggle Pill */}
           {!collapsed ? (
-            <div className="theme-switch-pill d-flex align-items-center justify-content-between p-1 bg-light rounded-pill">
+            <div className="theme-switch-pill d-flex align-items-center justify-content-between p-1 rounded-pill">
               <button 
                 type="button" 
                 className={`theme-switch-btn flex-grow-1 ${!darkMode ? 'active' : ''}`}
                 onClick={() => setDarkMode(false)}
+                title="Aktifkan Mode Terang (Light)"
               >
                 <Sun size={16} weight={!darkMode ? "fill" : "regular"} className={!darkMode ? "text-warning" : ""} />
                 <span className="small fw-semibold ms-1" style={{ fontSize: '0.75rem' }}>Light</span>
@@ -179,56 +255,61 @@ export const MainLayout = () => {
                 type="button" 
                 className={`theme-switch-btn flex-grow-1 ${darkMode ? 'active' : ''}`}
                 onClick={() => setDarkMode(true)}
+                title="Aktifkan Mode Gelap (Dark)"
               >
-                <Moon size={16} weight={darkMode ? "fill" : "regular"} />
+                <Moon size={16} weight={darkMode ? "fill" : "regular"} className={darkMode ? "text-primary" : ""} />
                 <span className="small fw-semibold ms-1" style={{ fontSize: '0.75rem' }}>Dark</span>
               </button>
             </div>
           ) : (
-            <button className="btn btn-sm btn-light rounded-circle mx-auto p-2" onClick={() => setDarkMode(!darkMode)}>
-              {darkMode ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
+            <div className="text-center">
+              <button 
+                className="btn btn-sm btn-light rounded-circle p-2"
+                onClick={() => setDarkMode(!darkMode)}
+                title={darkMode ? "Ganti ke Light Mode" : "Ganti ke Dark Mode"}
+              >
+                {darkMode ? <Sun size={16} className="text-warning" /> : <Moon size={16} />}
+              </button>
+            </div>
           )}
 
-          {/* Org / Factory Pill Dropdown matching reference */}
-          {!collapsed ? (
-            <div className="d-flex align-items-center justify-content-between p-2 rounded-3 bg-light border border-subtle">
-              <div className="d-flex align-items-center gap-2 overflow-hidden">
-                <Globe size={18} className="text-secondary flex-shrink-0" />
-                <div className="overflow-hidden">
-                  <div className="fw-bold small text-dark text-truncate" style={{ fontSize: '0.8rem' }}>SupplyFlow Factory</div>
-                  <div className="text-muted small text-truncate" style={{ fontSize: '0.675rem' }}>{getRoleLabel(user?.role)}</div>
-                </div>
+          {/* Plant Org Pill */}
+          {!collapsed && (
+            <div className="header-pill-btn d-flex align-items-center justify-content-between px-3 py-2">
+              <div className="d-flex align-items-center gap-2">
+                <Factory size={16} className="text-secondary" />
+                <span className="small fw-semibold text-truncate" style={{ maxWidth: '120px' }}>Pabrik Mojokerto</span>
               </div>
-              <CaretDown size={14} className="text-secondary flex-shrink-0" />
+              <CaretDown size={14} className="text-muted" />
             </div>
-          ) : null}
+          )}
 
-          {/* Collapse Button */}
+          {/* Collapse sidebar arrow button */}
           <div className="d-flex justify-content-end">
             <button 
-              className="btn btn-sm btn-light border p-1 rounded-circle"
+              className="btn btn-light btn-sm rounded-circle p-1 border shadow-xs d-flex align-items-center justify-content-center"
+              style={{ width: '28px', height: '28px' }}
               onClick={() => setCollapsed(!collapsed)}
               title={collapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
             >
-              {collapsed ? <CaretRight size={16} /> : <CaretLeft size={16} />}
+              {collapsed ? <CaretRight size={14} /> : <CaretLeft size={14} />}
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Workspace Body */}
+      {/* Main View Area */}
       <div 
-        className="d-flex flex-column flex-grow-1 min-vh-100" 
+        className="flex-grow-1 d-flex flex-column" 
         style={{ 
-          marginLeft: collapsed ? '80px' : '250px',
-          transition: 'margin-left 0.25s ease'
+          marginLeft: collapsed ? '80px' : '250px', 
+          transition: 'margin-left 0.25s ease' 
         }}
       >
-        {/* Top Header Navbar matching Nexora reference */}
+        {/* Header matching Nexora reference */}
         <header 
-          className="sticky-top bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between"
-          style={{ borderColor: '#EAEFF6', zIndex: 1020 }}
+          className="sticky-top border-bottom py-3 px-4 d-flex align-items-center justify-content-between"
+          style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-card)', zIndex: 1020 }}
         >
           {/* Left: Page Title */}
           <div>
@@ -257,38 +338,149 @@ export const MainLayout = () => {
             {/* Date Range Selector Pill */}
             <div className="header-pill-btn d-none d-sm-flex align-items-center">
               <CalendarBlank size={16} className="text-secondary" />
-              <span className="small">Oct 25 – Oct 31, 2026</span>
-              <CaretDown size={12} className="text-muted ms-1" />
+              <span className="small">Hari Ini • {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
             </div>
 
-            {/* Filters Pill Button */}
-            <div className="header-pill-btn d-none d-sm-flex align-items-center">
-              <Funnel size={16} className="text-secondary" />
-              <span className="small">Filters</span>
-            </div>
-
-            {/* Notification Bell with Badge */}
+            {/* Notification Bell with Badge and Interactive Dropdown */}
             <div className="position-relative">
               <button 
-                className="btn btn-light rounded-circle p-2 border border-subtle d-flex align-items-center justify-content-center"
+                className={`btn btn-light rounded-circle p-2 border border-subtle d-flex align-items-center justify-content-center ${showNotificationDropdown ? 'active border-primary' : ''}`}
                 style={{ width: '38px', height: '38px' }}
-                title="Notifikasi Sistem"
+                onClick={() => {
+                  setShowNotificationDropdown(!showNotificationDropdown);
+                  setShowUserDropdown(false);
+                }}
+                title="Notifikasi & Alerts Sistem"
               >
-                <Bell size={18} className="text-secondary" />
+                <Bell size={18} className={unreadCount > 0 ? "text-primary" : "text-secondary"} weight={unreadCount > 0 ? "fill" : "regular"} />
               </button>
-              <span 
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white"
-                style={{ fontSize: '0.65rem', padding: '0.2rem 0.35rem' }}
-              >
-                3
-              </span>
+              {unreadCount > 0 && (
+                <span 
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white"
+                  style={{ fontSize: '0.65rem', padding: '0.2rem 0.35rem' }}
+                >
+                  {unreadCount}
+                </span>
+              )}
+
+              {/* FLOATING NOTIFICATION CENTER DROPDOWN */}
+              {showNotificationDropdown && (
+                <div 
+                  className="position-absolute end-0 mt-2 card-nexora shadow-float p-0 overflow-hidden"
+                  style={{ width: '360px', zIndex: 1060 }}
+                >
+                  {/* Dropdown Header */}
+                  <div className="p-3 border-bottom d-flex align-items-center justify-content-between bg-light">
+                    <div className="d-flex align-items-center gap-2">
+                      <Bell size={18} weight="fill" className="text-primary" />
+                      <h6 className="fw-bold mb-0 text-dark">Pusat Notifikasi</h6>
+                      {unreadCount > 0 && (
+                        <span className="badge bg-danger-subtle text-danger border border-danger-subtle small py-0 px-2" style={{ fontSize: '0.7rem' }}>
+                          {unreadCount} Baru
+                        </span>
+                      )}
+                    </div>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={markAllRead} 
+                        className="btn btn-link btn-sm p-0 text-decoration-none small text-primary"
+                        style={{ fontSize: '0.75rem' }}
+                      >
+                        Tandai dibaca
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="px-3 py-2 border-bottom d-flex gap-1 bg-white">
+                    <button 
+                      className={`btn btn-sm py-0 px-2 rounded-pill ${filterType === 'all' ? 'btn-primary' : 'btn-light border'}`}
+                      style={{ fontSize: '0.7rem' }}
+                      onClick={() => setFilterType('all')}
+                    >
+                      Semua ({notifications.length})
+                    </button>
+                    <button 
+                      className={`btn btn-sm py-0 px-2 rounded-pill ${filterType === 'high' ? 'btn-danger' : 'btn-light border'}`}
+                      style={{ fontSize: '0.7rem' }}
+                      onClick={() => setFilterType('high')}
+                    >
+                      Kritis
+                    </button>
+                    <button 
+                      className={`btn btn-sm py-0 px-2 rounded-pill ${filterType === 'medium' ? 'btn-warning' : 'btn-light border'}`}
+                      style={{ fontSize: '0.7rem' }}
+                      onClick={() => setFilterType('medium')}
+                    >
+                      Peringatan
+                    </button>
+                  </div>
+
+                  {/* Notifications List */}
+                  <div className="overflow-y-auto" style={{ maxHeight: '340px' }}>
+                    {filteredNotifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted small">
+                        <CheckCircle size={32} className="text-success mb-2 d-block mx-auto" />
+                        Semua operasional berjalan lancar. Tidak ada peringatan baru.
+                      </div>
+                    ) : (
+                      filteredNotifications.map((n, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-3 border-bottom transition-all hover-bg"
+                          style={{ backgroundColor: idx % 2 === 0 ? 'var(--surface-card)' : 'rgba(0,0,0,0.01)' }}
+                        >
+                          <div className="d-flex align-items-center justify-content-between mb-1">
+                            <span 
+                              className={`badge-clean ${n.priority === 'High' ? 'badge-danger' : n.priority === 'Medium' ? 'badge-warning-low' : 'badge-planned'} py-0 px-2`}
+                              style={{ fontSize: '0.65rem' }}
+                            >
+                              Prioritas {n.priority}
+                            </span>
+                            <span className="text-muted" style={{ fontSize: '0.675rem' }}>{n.timestamp}</span>
+                          </div>
+                          <h6 className="fw-bold mb-1 fs-6 text-dark" style={{ fontSize: '0.85rem' }}>{n.title}</h6>
+                          <p className="text-muted small mb-2" style={{ fontSize: '0.775rem' }}>{n.description}</p>
+                          {n.action_url && (
+                            <Link 
+                              to={n.action_url}
+                              onClick={() => setShowNotificationDropdown(false)}
+                              className="small text-primary fw-bold text-decoration-none d-flex align-items-center gap-1"
+                              style={{ fontSize: '0.75rem' }}
+                            >
+                              <span>{n.action_label}</span>
+                              <ArrowRight size={12} weight="bold" />
+                            </Link>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Dropdown Footer */}
+                  <div className="p-2 border-top text-center bg-light">
+                    <Link 
+                      to="/" 
+                      onClick={() => setShowNotificationDropdown(false)}
+                      className="small text-primary fw-bold text-decoration-none d-inline-flex align-items-center gap-1"
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      <span>Lihat Analisis Lengkap di Dashboard</span>
+                      <ArrowRight size={12} />
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* User Profile Avatar with Dropdown */}
             <div className="position-relative">
               <button 
                 className="btn p-0 border-0 rounded-circle d-flex align-items-center gap-2"
-                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                onClick={() => {
+                  setShowUserDropdown(!showUserDropdown);
+                  setShowNotificationDropdown(false);
+                }}
               >
                 <div 
                   className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"

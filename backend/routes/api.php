@@ -102,4 +102,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Inventory Stocks (accessible to all authenticated users)
     Route::get('/inventory-stocks', [InventoryStockController::class, 'index']);
+    Route::post('/inventory-stocks/adjust', [InventoryStockController::class, 'adjust']);
+    Route::delete('/inventory-stocks/{id}', [InventoryStockController::class, 'resetStock']);
 });

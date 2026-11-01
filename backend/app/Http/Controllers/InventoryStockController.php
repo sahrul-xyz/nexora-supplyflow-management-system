@@ -72,4 +72,101 @@ class InventoryStockController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Penyesuaian stok gudang: Tambah, Kurangi, Set Nilai Baru, atau Kosongkan/Hapus stok.
+     */
+    public function adjust(Request $request)
+    {
+        $validated = $request->validate([
+            'warehouse_type' => 'required|in:raw_material,finished_goods',
+            'raw_material_id' => 'required_if:warehouse_type,raw_material|nullable|exists:raw_materials,id',
+            'product_variant_id' => 'required_if:warehouse_type,finished_goods|nullable|exists:product_variants,id',
+            'action' => 'required|in:add,reduce,set,reset',
+            'quantity' => 'required_unless:action,reset|nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $type = $validated['warehouse_type'];
+        $action = $validated['action'];
+        $amount = isset($validated['quantity']) ? (float)$validated['quantity'] : 0.0;
+
+        if ($type === 'raw_material') {
+            $stock = InventoryStock::firstOrCreate(
+                ['warehouse_type' => 'raw_material', 'raw_material_id' => $validated['raw_material_id']],
+                ['quantity' => 0]
+            );
+            $material = RawMaterial::find($validated['raw_material_id']);
+            $itemName = $material ? $material->material_name : 'Bahan Baku';
+            $unit = $material ? $material->unit : 'unit';
+        } else {
+            $stock = InventoryStock::firstOrCreate(
+                ['warehouse_type' => 'finished_goods', 'product_variant_id' => $validated['product_variant_id']],
+                ['quantity' => 0]
+            );
+            $variant = ProductVariant::with('product')->find($validated['product_variant_id']);
+            $itemName = $variant ? ($variant->product->product_name . ' (' . $variant->sku . ')') : 'Barang Jadi';
+            $unit = 'pasang';
+        }
+
+        $currentQty = (float) $stock->quantity;
+        $newQty = $currentQty;
+
+        switch ($action) {
+            case 'add':
+                $newQty = $currentQty + $amount;
+                $msg = "Stok {$itemName} berhasil ditambah sebanyak {$amount} {$unit}. Total stok saat ini: {$newQty} {$unit}.";
+                break;
+            case 'reduce':
+                if ($amount > $currentQty) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Pengurangan ({$amount} {$unit}) melebihi stok yang tersedia saat ini ({$currentQty} {$unit}).",
+                    ], 422);
+                }
+                $newQty = max(0, $currentQty - $amount);
+                $msg = "Stok {$itemName} berhasil dikurangi sebanyak {$amount} {$unit}. Sisa stok saat ini: {$newQty} {$unit}.";
+                break;
+            case 'set':
+                $newQty = max(0, $amount);
+                $msg = "Stok {$itemName} berhasil diatur menjadi {$newQty} {$unit}.";
+                break;
+            case 'reset':
+                $newQty = 0.0;
+                $msg = "Stok {$itemName} berhasil dikosongkan/dihapus (0 {$unit}).";
+                break;
+        }
+
+        $stock->quantity = $newQty;
+        $stock->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => $msg,
+            'data' => [
+                'stock_id' => $stock->id,
+                'warehouse_type' => $stock->warehouse_type,
+                'previous_quantity' => $currentQty,
+                'new_quantity' => $newQty,
+                'notes' => $validated['notes'] ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * Hapus / Kosongkan stok secara spesifik berdasarkan ID InventoryStock
+     */
+    public function resetStock($id)
+    {
+        $stock = InventoryStock::findOrFail($id);
+        $prev = (float) $stock->quantity;
+        $stock->quantity = 0;
+        $stock->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Stok berhasil dikosongkan/dihapus dari {$prev} menjadi 0.",
+            'data' => $stock,
+        ]);
+    }
 }

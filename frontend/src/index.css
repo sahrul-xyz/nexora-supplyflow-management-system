@@ -353,3 +353,212 @@ h1, h2, h3, h4, h5, h6 {
   color: #0f172a;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
+
+/* ============================================================== */
+/* DARK MODE THEME STYLING (Nexora Clean Modern Dark Theme)       */
+/* ============================================================== */
+
+[data-bs-theme="dark"],
+.dark-mode {
+  --bg-app: #0b0f19;
+  --surface-card: #151c2c;
+  --border-subtle: #212c42;
+  --border-active: #4f46e5;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 14px -2px rgba(0, 0, 0, 0.5);
+  --shadow-float: 0 12px 28px -4px rgba(0, 0, 0, 0.6);
+}
+
+[data-bs-theme="dark"] body,
+.dark-mode body,
+body.dark-mode {
+  background-color: #0b0f19 !important;
+  color: #f8fafc !important;
+}
+
+/* Sidebar Dark Mode */
+[data-bs-theme="dark"] .nexora-sidebar,
+.dark-mode .nexora-sidebar {
+  background-color: #111827 !important;
+  border-right-color: #1f293d !important;
+}
+
+[data-bs-theme="dark"] .nexora-nav-item,
+.dark-mode .nexora-nav-item {
+  color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .nexora-nav-item:hover,
+.dark-mode .nexora-nav-item:hover {
+  color: #f8fafc;
+  background-color: #1f293d;
+}
+
+[data-bs-theme="dark"] .nexora-nav-item.active,
+.dark-mode .nexora-nav-item.active {
+  color: #818cf8;
+  background-color: #1e1e38;
+}
+
+/* Header & Sticky Bar Dark Mode */
+[data-bs-theme="dark"] header.sticky-top,
+.dark-mode header.sticky-top {
+  background-color: #111827 !important;
+  border-bottom-color: #1f293d !important;
+}
+
+[data-bs-theme="dark"] .header-search-pill,
+.dark-mode .header-search-pill {
+  background: #151c2c;
+  border-color: #212c42;
+}
+
+[data-bs-theme="dark"] .header-search-input,
+.dark-mode .header-search-input {
+  color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .header-pill-btn,
+.dark-mode .header-pill-btn {
+  background: #151c2c !important;
+  border-color: #212c42 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .header-pill-btn:hover,
+.dark-mode .header-pill-btn:hover {
+  background: #212c42 !important;
+  color: #ffffff !important;
+}
+
+/* Cards & Surfaces */
+[data-bs-theme="dark"] .card-nexora,
+.dark-mode .card-nexora {
+  background: #151c2c !important;
+  border-color: #212c42 !important;
+}
+
+[data-bs-theme="dark"] .ai-insights-card,
+.dark-mode .ai-insights-card {
+  background: linear-gradient(135deg, #151c2c 0%, #1f1b3b 100%) !important;
+  border-color: #3b3564 !important;
+}
+
+/* Tables in Dark Mode */
+[data-bs-theme="dark"] .table-clean th,
+.dark-mode .table-clean th {
+  background-color: #0f1523 !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #212c42 !important;
+}
+
+[data-bs-theme="dark"] .table-clean td,
+.dark-mode .table-clean td {
+  border-bottom-color: #1a2233 !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .table-clean tbody tr:hover,
+.dark-mode .table-clean tbody tr:hover {
+  background-color: #1a2233 !important;
+}
+
+/* Form inputs & Selects */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select,
+.dark-mode .form-control,
+.dark-mode .form-select {
+  background-color: #111827 !important;
+  border-color: #212c42 !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus,
+.dark-mode .form-control:focus,
+.dark-mode .form-select:focus {
+  border-color: #6366f1 !important;
+}
+
+[data-bs-theme="dark"] .input-group-text,
+.dark-mode .input-group-text {
+  background-color: #111827 !important;
+  border-color: #212c42 !important;
+  color: #94a3b8 !important;
+}
+
+/* Bootstrap Utility Overrides in Dark Mode */
+[data-bs-theme="dark"] .bg-white,
+.dark-mode .bg-white {
+  background-color: #151c2c !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .bg-light,
+.dark-mode .bg-light {
+  background-color: #0f1523 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .text-dark,
+.dark-mode .text-dark {
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .text-muted,
+.dark-mode .text-muted {
+  color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .border,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-subtle,
+.dark-mode .border,
+.dark-mode .border-top,
+.dark-mode .border-bottom,
+.dark-mode .border-subtle {
+  border-color: #212c42 !important;
+}
+
+/* Modals & Dropdowns */
+[data-bs-theme="dark"] .modal-content,
+.dark-mode .modal-content {
+  background-color: #151c2c !important;
+  border-color: #212c42 !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .dropdown-menu,
+.dark-mode .dropdown-menu {
+  background-color: #151c2c !important;
+  border-color: #212c42 !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item,
+.dark-mode .dropdown-item {
+  color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover,
+.dark-mode .dropdown-item:hover {
+  background-color: #212c42 !important;
+  color: #ffffff !important;
+}
+
+/* Theme switch pill */
+[data-bs-theme="dark"] .theme-switch-pill,
+.dark-mode .theme-switch-pill {
+  background-color: #0f1523 !important;
+}
+
+[data-bs-theme="dark"] .theme-switch-btn.active,
+.dark-mode .theme-switch-btn.active {
+  background-color: #1f293d !important;
+  color: #818cf8 !important;
+}

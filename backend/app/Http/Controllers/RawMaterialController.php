@@ -89,21 +89,77 @@ class RawMaterialController extends Controller
             'material_name' => 'required|string|max:150',
             'unit' => 'required|string|max:20',
             'minimum_stock' => 'required|numeric|min:0',
+            'current_stock' => 'nullable|numeric|min:0',
             'is_active' => 'nullable|boolean',
         ]);
 
-        $material->update($validated);
+        $material->update([
+            'material_code' => $validated['material_code'],
+            'material_name' => $validated['material_name'],
+            'unit' => $validated['unit'],
+            'minimum_stock' => $validated['minimum_stock'],
+            'is_active' => $validated['is_active'] ?? $material->is_active,
+        ]);
+
+        // If current stock was also edited in the modal
+        if ($request->has('current_stock')) {
+            $stock = InventoryStock::firstOrCreate(
+                ['raw_material_id' => $material->id, 'warehouse_type' => 'raw_material'],
+                ['quantity' => 0]
+            );
+            $stock->quantity = (float)$validated['current_stock'];
+            $stock->save();
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Bahan baku berhasil diperbarui.',
+            'message' => 'Data bahan baku dan stok berhasil diperbarui.',
             'data' => $material->load('stock'),
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $material = RawMaterial::findOrFail($id);
+        $material = RawMaterial::with('stock')->findOrFail($id);
+
+        // Reset stock action
+        if ($request->query('action') === 'reset_stock') {
+            if ($material->stock) {
+                $material->stock->quantity = 0;
+                $material->stock->save();
+            }
+            return response()->json([
+                'success' => true,
+                'message' => "Stok {$material->material_name} berhasil dikosongkan (0 {$material->unit}).",
+                'data' => $material->load('stock'),
+            ]);
+        }
+
+        // Permanent deletion requested
+        if ($request->query('permanent') === 'true' || $request->input('permanent') === true) {
+            $hasBom = $material->bomDetails()->exists();
+            $hasPo = $material->purchaseOrderDetails()->exists();
+
+            if ($hasBom || $hasPo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Bahan baku '{$material->material_name}' memiliki riwayat PO atau terkait dengan BOM Produk sehingga tidak dapat dihapus permanen. Gunakan fitur nonaktifkan status atau kosongkan stok.",
+                ], 422);
+            }
+
+            // Safe to delete permanently
+            if ($material->stock) {
+                $material->stock->delete();
+            }
+            $material->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bahan baku '{$material->material_name}' berhasil dihapus permanen dari sistem.",
+            ]);
+        }
+
+        // Default: Toggle active status
         $material->is_active = !$material->is_active;
         $material->save();
 
